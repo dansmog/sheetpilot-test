@@ -1,8 +1,10 @@
 export default function RegisterPage() {
   return (
     <section className="w-full">
-      <h1>Create an account</h1>
-      <p>Manage shift planning like a boss!</p>
+      <div className="flex flex-col gap-1 w-full">
+        <h1 className="text-primary text-xl">Create an account</h1>
+        <p className="text-accent-soft">Manage shift planning like a boss!</p>
+      </div>
     </section>
   );
 }

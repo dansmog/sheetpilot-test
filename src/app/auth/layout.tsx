@@ -10,7 +10,7 @@ export default function AuthLayout({
     <div className="min-h-screen auth-wrapper flex items-center justify-center bg-gray-50">
       <div className="max-w-md w-full">
         <div className="bg-white w-[420px] mx-auto p-5 rounded-lg">
-          <header className="w-full flex flex-col items-center justify-center mb-4">
+          <header className="w-full flex flex-col items-center justify-center mb-6">
             <div className="flex items-center gap-1">
               <Image src={Logo} alt="SheetPilot Logo" className="h-8 w-auto" />
               <h1 className="text-lg tracking-tight font-medium">SheetPilot</h1>

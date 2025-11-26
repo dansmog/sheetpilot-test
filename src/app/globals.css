@@ -198,3 +198,8 @@
   background-repeat: no-repeat;
   background-size: cover;
 }
+
+html,
+body {
+  letter-spacing: -0.08em;
+}
