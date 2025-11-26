@@ -1,7 +1,9 @@
 export default function LoginPage() {
   return (
-    <section>
-      <h1>Log in</h1>
+    <section className="">
+      <h1 className="text-center text-base">
+        Welcome back! Log in to manage your company
+      </h1>
     </section>
   );
 }
