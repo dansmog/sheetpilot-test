@@ -109,6 +109,7 @@
 }
 
 :root {
+  /* shadcn Design System */
   --radius: 0.625rem;
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -141,9 +142,105 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* Platform Brand Colors */
+  --brand: #0f172a;
+  --brand-2: #2b5eec;
+
+  /* Platform Background Colors */
+  --color-bg-body: #f6f7f9;
+  --color-bg-surface: #ffffff;
+  --color-bg-surface-alt: #f8fafc;
+  --color-bg-elevated: #eef1f5;
+  --color-bg-subtle: #f1f5f9;
+  --color-bg-inverse: #101828;
+  --color-bg-highlight: #e8efff;
+
+  /* Platform Text Colors */
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  --color-text-tertiary: #94a3b8;
+  --color-text-inverse: #f8fafc;
+  --color-text-on-accent: #ffffff;
+  --color-text-placeholder: #94a3b8;
+
+  /* Platform Accent Colors */
+  --color-accent: #2b5eec;
+  --color-accent-hover: #244fd6;
+  --color-accent-active: #1b3dab;
+  --color-accent-strong: #1f4bd9;
+  --color-accent-soft: #e8efff;
+  --color-accent-border: rgba(43, 94, 236, 0.3);
+
+  /* Platform Success Colors */
+  --color-success: #0f9d58;
+  --color-success-strong: #0c7a45;
+  --color-success-soft: #ddf7ea;
+  --color-success-border-soft: rgba(15, 157, 88, 0.3);
+
+  /* Platform Warning Colors */
+  --color-warning: #f6ad1b;
+  --color-warning-strong: #b97806;
+  --color-warning-soft: #fff3d6;
+  --color-warning-border-soft: rgba(246, 173, 27, 0.3);
+
+  /* Platform Danger Colors */
+  --color-danger: #e11d48;
+  --color-danger-strong: #be123c;
+  --color-danger-soft: #ffe4ec;
+  --color-danger-border-soft: rgba(225, 29, 72, 0.3);
+
+  /* Platform Border Colors */
+  --color-border-subtle: rgba(15, 23, 42, 0.08);
+  --color-border-strong: rgba(15, 23, 42, 0.16);
+  --color-border-bold: rgba(15, 23, 42, 0.22);
+  --color-border-focus: rgba(43, 94, 236, 0.55);
+  --color-border-inverse: rgba(255, 255, 255, 0.12);
+
+  /* Platform Control Colors */
+  --color-control-bg: #ffffff;
+  --color-control-bg-hover: #f8fafc;
+  --color-control-bg-active: #f1f5f9;
+  --color-control-border: rgba(15, 23, 42, 0.12);
+  --color-control-border-hover: rgba(15, 23, 42, 0.18);
+  --color-control-border-active: rgba(43, 94, 236, 0.5);
+
+  /* Platform Neutral Colors */
+  --color-neutral-250: #d0d9e4;
+  --color-neutral-300: #cbd5e1;
+
+  /* Platform Chart/Analytics Colors */
+  --color-chart-primary: #2b5eec;
+  --color-chart-secondary: #0f172a;
+  --color-chart-neutral: #94a3b8;
+  --color-chart-accent: #f97316;
+  --color-chart-success: #0f9d58;
+  --color-chart-purple: #6366f1;
+  --color-chart-teal: #0ea5e9;
+  --color-chart-magenta: #d946ef;
+
+  /* Platform Editor/Sheet Colors */
+  --color-editor-surface: #2c2c2e;
+  --color-editor-accent: #0a84ff;
+  --color-editor-danger: #ff3b30;
+  --color-editor-divider: #545458;
+  --color-editor-muted: #c7c7cc;
+
+  /* Platform Branding Defaults */
+  --color-default-background: #f6f7f9;
+  --color-default-card: #ffffff;
+  --color-default-borders: #e6e6e9;
+
+  /* Platform Shadows */
+  --shadow-xs: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
+  --shadow-sm: 0 1px 3px 0 rgba(15, 23, 42, 0.1), 0 1px 2px -1px rgba(15, 23, 42, 0.1);
+  --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.1), 0 2px 4px -2px rgba(15, 23, 42, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
 }
 
 .dark {
+  /* shadcn Dark Theme */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -175,6 +272,52 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* Platform Dark Theme Overrides */
+  --color-bg-body: #0b0f14;
+  --color-bg-surface: #0f141b;
+  --color-bg-surface-alt: #121922;
+  --color-bg-elevated: #151f2b;
+  --color-bg-subtle: #1a2635;
+  --color-bg-inverse: #f8fafc;
+  --color-bg-highlight: rgba(122, 162, 255, 0.15);
+
+  --color-text-primary: #e5ecf6;
+  --color-text-secondary: #c7d0dd;
+  --color-text-muted: #9fb0c3;
+  --color-text-tertiary: #7a8da6;
+  --color-text-inverse: #0f172a;
+
+  --color-accent: #7aa2ff;
+  --color-accent-hover: #6a90f0;
+  --color-accent-active: #5a7dd9;
+  --color-accent-strong: #8fb3ff;
+  --color-accent-soft: rgba(122, 162, 255, 0.2);
+
+  --color-success: #34d399;
+  --color-success-strong: #10b981;
+  --color-success-soft: rgba(52, 211, 153, 0.2);
+
+  --color-warning: #fbbf24;
+  --color-warning-strong: #f59e0b;
+  --color-warning-soft: rgba(251, 191, 36, 0.2);
+
+  --color-danger: #f87171;
+  --color-danger-strong: #ef4444;
+  --color-danger-soft: rgba(248, 113, 113, 0.2);
+
+  --color-border-subtle: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.14);
+  --color-border-bold: rgba(255, 255, 255, 0.2);
+  --color-border-focus: rgba(122, 162, 255, 0.5);
+  --color-border-inverse: rgba(15, 23, 42, 0.3);
+
+  --color-control-bg: #151f2b;
+  --color-control-bg-hover: #1a2635;
+  --color-control-bg-active: #1f2d3e;
+  --color-control-border: rgba(255, 255, 255, 0.1);
+  --color-control-border-hover: rgba(255, 255, 255, 0.16);
+  --color-control-border-active: rgba(122, 162, 255, 0.5);
 }
 
 @layer base {
@@ -201,5 +344,5 @@
 
 html,
 body {
-  letter-spacing: -0.08em;
+  letter-spacing: -0.02em;
 }
