@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { registerUser } from "@/lib/supabase/users";
+import { registerUser } from "@/lib/supabase/users/queries";
 
 export async function POST(request: Request) {
   try {
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
       );
     }
 
-    const { user, error } = await registerUser(email, password, fullName);
+    const { user, error } = await registerUser({ email, password, fullName });
 
     if (error) {
       return NextResponse.json(
@@ -24,7 +24,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       {
-        message: "Registration successful. Please check your email to verify your account.",
+        message:
+          "Registration successful. Please check your email to verify your account.",
         user: {
           id: user?.id,
           email: user?.email,
