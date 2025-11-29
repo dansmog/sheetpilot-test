@@ -38,11 +38,34 @@ export default function RegisterPage() {
   async function onSubmit(data: RegisterFormValues) {
     setIsLoading(true);
     try {
-      // TODO: Implement registration logic
-      console.log(data);
-      // Add your registration API call here
+      const response = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+          fullName: data.fullName,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Registration failed");
+      }
+
+      // Success - show message or redirect
+      console.log(result.message);
+      // You might want to redirect to login or show a success message
+      // Example: router.push("/auth/login");
     } catch (error) {
       console.error(error);
+      // You might want to show a toast or error message here
+      form.setError("root", {
+        message: error instanceof Error ? error.message : "Registration failed",
+      });
     } finally {
       setIsLoading(false);
     }

@@ -1,5 +1,37 @@
 import { createClient } from "@/utils/supabase/server";
-import { UserProfileProps } from "@/utils/types";
+import { RegisterProps, UserProfileProps } from "@/utils/types";
+import type { User } from "@supabase/supabase-js";
+
+// User Registration and Auth
+export async function registerUser({
+  email,
+  password,
+  fullName,
+}: RegisterProps): Promise<{ user: User | null; error: Error | null }> {
+  const supabase = await createClient();
+
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        full_name: fullName,
+      },
+    },
+  });
+
+  if (authError || !authData.user) {
+    return { user: null, error: authError };
+  }
+
+  try {
+    await updateUserProfile(authData.user.id, { full_name: fullName });
+  } catch (updateError) {
+    return { user: null, error: updateError as Error };
+  }
+
+  return { user: authData.user, error: null };
+}
 
 // User Profile Queries
 export async function getUserProfile(

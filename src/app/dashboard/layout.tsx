@@ -1,3 +1,7 @@
-//sheetpilot.app/dashboard/[slug]/
-
-//slug -> company
+export default function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return <section>{children}</section>;
+}

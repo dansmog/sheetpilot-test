@@ -1,3 +1,9 @@
+export interface RegisterProps {
+  fullName: string;
+  email: string;
+  password: string;
+}
+
 export interface CompanyProps {
   id: string;
   name: string;
