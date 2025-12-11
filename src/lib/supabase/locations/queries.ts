@@ -25,3 +25,45 @@ export async function getLocations(
 
   return data || [];
 }
+
+export interface CreateLocationData {
+  company_id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  address?: string | null;
+  timezone?: string;
+  is_active?: boolean;
+  created_by?: string;
+}
+
+export async function createLocation(
+  locationData: CreateLocationData
+): Promise<LocationProps> {
+  const supabase = await createClient();
+
+  // Get the max display_order for this company
+  const { data: maxOrderData } = await supabase
+    .from("locations")
+    .select("display_order")
+    .eq("company_id", locationData.company_id)
+    .order("display_order", { ascending: false })
+    .limit(1);
+
+  const nextDisplayOrder = maxOrderData?.[0]?.display_order
+    ? maxOrderData[0].display_order + 1
+    : 0;
+
+  const { data: location, error } = await supabase
+    .from("locations")
+    .insert({
+      ...locationData,
+      display_order: nextDisplayOrder,
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+
+  return location;
+}

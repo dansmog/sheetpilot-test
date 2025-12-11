@@ -1,3 +1,16 @@
+export interface LoginProps {
+  email: string;
+  password: string;
+}
+
+// export interface LoginResponseProps {
+//   success: boolean;
+//   user: any;
+//   company: any;
+//   redirectUrl: string;
+//   error?: string;
+// }
+
 export interface RegisterProps {
   fullName: string;
   email: string;
@@ -8,7 +21,7 @@ export interface CompanyProps {
   id: string;
   name: string;
   domain: string;
-  console_slug: string;
+  slug: string;
   company_email: string | null;
   logo_url: string | null;
   primary_color: string;
@@ -56,4 +69,17 @@ export interface UserProfileProps {
   bio: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserCompanyProps {
+  id: string;
+  company_id: string;
+  role: "owner" | "admin" | "member";
+  status: string;
+  company: {
+    id: string;
+    name: string;
+    slug: string;
+    logo_url: string | null;
+  };
 }

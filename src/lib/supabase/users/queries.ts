@@ -17,17 +17,12 @@ export async function registerUser({
       data: {
         full_name: fullName,
       },
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
     },
   });
 
   if (authError || !authData.user) {
     return { user: null, error: authError };
-  }
-
-  try {
-    await updateUserProfile(authData.user.id, { full_name: fullName });
-  } catch (updateError) {
-    return { user: null, error: updateError as Error };
   }
 
   return { user: authData.user, error: null };
@@ -62,8 +57,7 @@ export async function updateUserProfile(
 
   const { data: updatedProfile, error } = await supabase
     .from("users")
-    .update(data)
-    .eq("id", userId)
+    .upsert({ id: userId, ...data })
     .select()
     .single();
 

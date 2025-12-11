@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import { useDebounce } from "@uidotdev/usehooks";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,10 +20,17 @@ import {
   createCompanySchema,
   type CreateCompanyFormValues,
 } from "@/utils/validation-schemas/company.schema";
+import {
+  useCheckSlugAvailability,
+  useCreateCompany,
+} from "@/hooks/react-query/hooks/use-company";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
+import { CircleCheck, CircleX } from "lucide-react";
 
 export default function CreateCompanyPage() {
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const { mutate: createCompany, isPending } = useCreateCompany();
 
   const form = useForm<CreateCompanyFormValues>({
     resolver: zodResolver(createCompanySchema),
@@ -33,62 +40,35 @@ export default function CreateCompanyPage() {
       companyEmail: "",
     },
   });
+  const debouncedSlugTerm = useDebounce(form.watch("subdomain"), 300);
 
-  // Auto-generate subdomain from company name
-  const handleCompanyNameChange = (value: string) => {
-    const currentSubdomain = form.getValues("subdomain");
-
-    // Only auto-generate if subdomain is empty or hasn't been manually edited
-    if (
-      !currentSubdomain ||
-      currentSubdomain === generateSubdomain(form.getValues("name"))
-    ) {
-      const generatedSubdomain = generateSubdomain(value);
-      form.setValue("subdomain", generatedSubdomain);
-    }
-  };
-
-  const generateSubdomain = (name: string): string => {
-    return name
-      .toLowerCase()
-      .replace(/[^a-z0-9\s-]/g, "") // Remove special characters
-      .replace(/\s+/g, "-") // Replace spaces with hyphens
-      .replace(/-+/g, "-") // Replace multiple hyphens with single hyphen
-      .replace(/^-|-$/g, ""); // Remove leading/trailing hyphens
-  };
+  const {
+    data: slugData,
+    isLoading: isCheckingSlug,
+    error: slugError,
+  } = useCheckSlugAvailability(debouncedSlugTerm);
 
   async function onSubmit(data: CreateCompanyFormValues) {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/companies", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to create company");
-      }
-
-      const { company } = await response.json();
-      console.log("Company created:", company);
-      router.push("/dashboard");
-    } catch (error) {
-      console.error(error);
-      const message =
-        error instanceof Error ? error.message : "Failed to create company";
-      alert(message);
-    } finally {
-      setIsLoading(false);
-    }
+    createCompany(data, {
+      onSuccess: (response) => {
+        toast.success("Company created successfully");
+        console.log("Company created:", response.company);
+        router.push("/dashboard");
+      },
+      onError: (error) => {
+        console.error(error);
+        const message =
+          error instanceof Error ? error.message : "Failed to create company";
+        toast.error(message);
+      },
+    });
   }
 
   return (
     <section className="w-full">
       <div className="flex flex-col text-center w-full mb-10">
         <h1 className="text-center text-primary text-xl font-semibold mb-1">
-          Hello Juwon, let&apos;s create company
+          Now, let&apos;s create company
         </h1>
         <p className="text-muted-foreground text-sm">
           Set up your organization to start managing shifts
@@ -106,11 +86,10 @@ export default function CreateCompanyPage() {
                 <FormControl>
                   <Input
                     placeholder="Acme Inc."
-                    disabled={isLoading}
+                    disabled={isPending}
                     {...field}
                     onChange={(e) => {
                       field.onChange(e);
-                      handleCompanyNameChange(e.target.value);
                     }}
                   />
                 </FormControl>
@@ -125,19 +104,44 @@ export default function CreateCompanyPage() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Subdomain</FormLabel>
+
                 <FormControl>
                   <div className="relative">
                     <Input
                       placeholder="acme"
-                      disabled={isLoading}
+                      disabled={isPending}
                       className="pr-32"
                       {...field}
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
-                      .sheetpilot.app
+
+                    {/* RIGHT SIDE CONTAINER */}
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-sm text-muted-foreground">
+                      <span>.sheetpilot.app</span>
+
+                      {/* Spinner / icons */}
+                      {field.value?.length > 1 && (
+                        <>
+                          {isCheckingSlug && <Spinner className="size-3" />}
+
+                          {!isCheckingSlug && slugData?.available && (
+                            <CircleCheck className="size-4 text-green-600" />
+                          )}
+
+                          {!isCheckingSlug &&
+                            slugData &&
+                            !slugData.available && (
+                              <CircleX className="size-4 text-red-600" />
+                            )}
+
+                          {slugError && (
+                            <CircleX className="size-4 text-red-600" />
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
                 </FormControl>
+
                 <FormDescription>Your unique company URL</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -154,7 +158,7 @@ export default function CreateCompanyPage() {
                   <Input
                     type="email"
                     placeholder="billing@yourcompany.com"
-                    disabled={isLoading}
+                    disabled={isPending}
                     {...field}
                   />
                 </FormControl>
@@ -169,16 +173,11 @@ export default function CreateCompanyPage() {
 
           <div className="flex gap-3 pt-4">
             <Button
-              type="button"
-              variant="outline"
+              type="submit"
               className="flex-1"
-              disabled={isLoading}
-              onClick={() => router.back()}
+              disabled={isPending || slugData?.available === false}
             >
-              Cancel
-            </Button>
-            <Button type="submit" className="flex-1" disabled={isLoading}>
-              {isLoading ? "Creating..." : "Create company"}
+              {isPending ? "Creating..." : "Create company"}
             </Button>
           </div>
         </form>

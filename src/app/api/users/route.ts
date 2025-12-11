@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAuthUser } from "@/utils";
-import { getUserProfile, updateUserProfile } from "@/lib/supabase/users";
+import {
+  getUserProfile,
+  updateUserProfile,
+} from "@/lib/supabase/users/queries";
 
 export async function GET() {
   try {
@@ -28,15 +31,26 @@ export async function PATCH(request: Request) {
     const { user } = await getAuthUser();
     const body = await request.json();
 
-    const profile = await updateUserProfile(user.id, body);
+    // Ensure email is included in the update
+    const updateData = {
+      ...body,
+      email: user.email,
+    };
+
+    const profile = await updateUserProfile(user.id, updateData);
 
     return NextResponse.json({ profile });
   } catch (error) {
+    console.error("Profile update error:", error);
     if (error instanceof Error && error.message === "Unauthorized") {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    console.log({ error });
     return NextResponse.json(
-      { error: "Failed to update profile" },
+      {
+        error: "Failed to update profile",
+        details: error instanceof Error ? error.message : "Unknown error",
+      },
       { status: 500 }
     );
   }

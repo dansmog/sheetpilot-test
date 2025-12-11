@@ -21,10 +21,12 @@ import {
   loginSchema,
   type LoginFormValues,
 } from "@/utils/validation-schemas/auth.schema";
+import { useLoginUser } from "@/hooks/react-query/hooks/use-user";
+import { Spinner } from "@/components/ui/spinner";
 
 export default function LoginPage() {
+  const { mutate: loginUser, isPending } = useLoginUser();
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -35,28 +37,12 @@ export default function LoginPage() {
   });
 
   async function onSubmit(data: LoginFormValues) {
-    setIsLoading(true);
-    try {
-      // TODO: Implement login logic
-      console.log(data);
-      // Add your login API call here
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+    loginUser(data);
   }
 
   async function handleGoogleSignIn() {
-    setIsLoading(true);
-    try {
-      // TODO: Implement Google OAuth logic
-      console.log("Google sign in");
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+    // TODO: Implement Google OAuth logic later
+    console.log("Google sign-in to be implemented later");
   }
 
   return (
@@ -83,7 +69,7 @@ export default function LoginPage() {
                     type="email"
                     placeholder="john@example.com"
                     autoComplete="email"
-                    disabled={isLoading}
+                    disabled={isPending}
                     {...field}
                   />
                 </FormControl>
@@ -105,7 +91,7 @@ export default function LoginPage() {
                         type={showPassword ? "text" : "password"}
                         placeholder="••••••••"
                         autoComplete="current-password"
-                        disabled={isLoading}
+                        disabled={isPending}
                         className="pr-10"
                         {...field}
                       />
@@ -115,7 +101,7 @@ export default function LoginPage() {
                         size="icon"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
-                        disabled={isLoading}
+                        disabled={isPending}
                         aria-label={
                           showPassword ? "Hide password" : "Show password"
                         }
@@ -142,8 +128,8 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Signing in..." : "Sign in"}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? <Spinner className="text-white" /> : "Sign in"}
           </Button>
         </form>
       </Form>
@@ -160,7 +146,7 @@ export default function LoginPage() {
         variant="outline"
         className="w-full"
         onClick={handleGoogleSignIn}
-        disabled={isLoading}
+        disabled={isPending}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

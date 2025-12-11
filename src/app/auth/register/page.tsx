@@ -4,8 +4,11 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 
+import { toast } from "sonner";
+
+import { Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -22,9 +25,13 @@ import {
   type RegisterFormValues,
 } from "@/utils/validation-schemas/auth.schema";
 
+import { useRegisterUser } from "@/hooks/react-query/hooks";
+import { Spinner } from "@/components/ui/spinner";
+
 export default function RegisterPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const { mutate: register, isPending } = useRegisterUser();
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -35,52 +42,24 @@ export default function RegisterPage() {
     },
   });
 
-  async function onSubmit(data: RegisterFormValues) {
-    setIsLoading(true);
-    try {
-      const response = await fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-          fullName: data.fullName,
-        }),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Registration failed");
-      }
-
-      // Success - show message or redirect
-      console.log(result.message);
-      // You might want to redirect to login or show a success message
-      // Example: router.push("/auth/login");
-    } catch (error) {
-      console.error(error);
-      // You might want to show a toast or error message here
-      form.setError("root", {
-        message: error instanceof Error ? error.message : "Registration failed",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+  function onSubmit(data: RegisterFormValues) {
+    register(data, {
+      onSuccess: (result) => {
+        console.log(result.message);
+        toast.success("Registration successful! Please check your email.");
+        setTimeout(() => {
+          router.push("/auth/success");
+        }, 1000);
+      },
+      onError: (error) => {
+        toast.error(error.message || "Registration failed. Please try again.");
+      },
+    });
   }
 
-  async function handleGoogleSignIn() {
-    setIsLoading(true);
-    try {
-      // TODO: Implement Google OAuth logic
-      console.log("Google sign in");
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+  function handleGoogleSignIn() {
+    // TODO: Implement Google OAuth logic
+    console.log("Google sign in");
   }
 
   return (
@@ -106,7 +85,7 @@ export default function RegisterPage() {
                   <Input
                     placeholder="John Doe"
                     autoComplete="name"
-                    disabled={isLoading}
+                    disabled={isPending}
                     {...field}
                   />
                 </FormControl>
@@ -126,7 +105,7 @@ export default function RegisterPage() {
                     type="email"
                     placeholder="john@example.com"
                     autoComplete="email"
-                    disabled={isLoading}
+                    disabled={isPending}
                     {...field}
                   />
                 </FormControl>
@@ -147,7 +126,7 @@ export default function RegisterPage() {
                       type={showPassword ? "text" : "password"}
                       placeholder="••••••••"
                       autoComplete="new-password"
-                      disabled={isLoading}
+                      disabled={isPending}
                       className="pr-10"
                       {...field}
                     />
@@ -157,7 +136,7 @@ export default function RegisterPage() {
                       size="icon"
                       className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                       onClick={() => setShowPassword(!showPassword)}
-                      disabled={isLoading}
+                      disabled={isPending}
                       aria-label={
                         showPassword ? "Hide password" : "Show password"
                       }
@@ -175,8 +154,8 @@ export default function RegisterPage() {
             )}
           />
 
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating account..." : "Create account"}
+          <Button type="submit" className="w-full" disabled={isPending}>
+            {isPending ? <Spinner className="text-white" /> : "Create account"}
           </Button>
         </form>
       </Form>
@@ -193,7 +172,7 @@ export default function RegisterPage() {
         variant="outline"
         className="w-full"
         onClick={handleGoogleSignIn}
-        disabled={isLoading}
+        disabled={isPending}
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"

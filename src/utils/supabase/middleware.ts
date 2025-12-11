@@ -8,7 +8,7 @@ export async function updateSession(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_SUPABASE_PUBLISHABLE_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         getAll() {
@@ -39,23 +39,82 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Skip middleware for API routes
+  if (request.nextUrl.pathname.startsWith("/api")) {
+    return supabaseResponse;
+  }
+
   // Protected routes that require authentication
   const isOnboardingRoute = request.nextUrl.pathname.startsWith("/onboarding");
   const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
   const isAuthRoute = request.nextUrl.pathname.startsWith("/auth");
 
   // Redirect unauthenticated users trying to access protected routes
-  if (!user && (isOnboardingRoute || isDashboardRoute)) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/auth/login";
-    return NextResponse.redirect(url);
-  }
+  // if (!user && (isOnboardingRoute || isDashboardRoute)) {
+  //   const url = request.nextUrl.clone();
+  //   url.pathname = "/auth/login";
+  //   return NextResponse.redirect(url);
+  // }
 
-  // Redirect authenticated users away from auth pages
-  if (user && isAuthRoute) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/onboarding/company";
-    return NextResponse.redirect(url);
+  // For authenticated users
+  if (user) {
+    if (isAuthRoute) {
+      try {
+        // Dynamic import to avoid circular dependencies
+        const { getUserPrimaryCompany } = await import(
+          "@/lib/supabase/companies/queries"
+        );
+        const primaryCompany = await getUserPrimaryCompany(user.id);
+
+        const url = request.nextUrl.clone();
+        if (primaryCompany?.company?.slug) {
+          url.pathname = `/dashboard/${primaryCompany.company.slug}`;
+        } else {
+          url.pathname = "/onboarding/company";
+        }
+        return NextResponse.redirect(url);
+      } catch (error) {
+        console.error("Error checking user company:", error);
+        const url = request.nextUrl.clone();
+        url.pathname = "/onboarding/company";
+        return NextResponse.redirect(url);
+      }
+    }
+
+    // Verify dashboard slug access
+    if (isDashboardRoute) {
+      const pathname = request.nextUrl.pathname;
+      const slugMatch = pathname.match(/^\/dashboard\/([^\/]+)/);
+
+      if (slugMatch) {
+        const slug = slugMatch[1];
+
+        try {
+          const { getUserCompanies } = await import(
+            "@/lib/supabase/companies/queries"
+          );
+          const companies = await getUserCompanies(user.id);
+
+          const hasAccess = companies.some((c) => c.company.slug === slug);
+
+          if (!hasAccess) {
+            // User doesn't have access to this company
+            const url = request.nextUrl.clone();
+            const primaryCompany = companies[0];
+
+            if (primaryCompany?.company?.slug) {
+              url.pathname = `/dashboard/${primaryCompany.company.slug}`;
+            } else {
+              url.pathname = "/onboarding/company";
+            }
+            return NextResponse.redirect(url);
+          }
+        } catch (error) {
+          console.error("Error verifying dashboard access:", error);
+          // On error, allow access (fail open for better UX)
+        }
+      }
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
