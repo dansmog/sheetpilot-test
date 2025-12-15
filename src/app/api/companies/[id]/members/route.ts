@@ -7,19 +7,15 @@ import {
 } from "@/lib/supabase/company-members/queries";
 import { addCompanyMemberSchema } from "@/utils/validation-schemas/company-member.schema";
 
-export async function GET(request: Request) {
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     await getAuthUser();
+    const { id: companyId } = await params;
     const { searchParams } = new URL(request.url);
-    const companyId = searchParams.get("companyId");
     const activeOnly = searchParams.get("activeOnly") === "true";
-
-    if (!companyId) {
-      return NextResponse.json(
-        { error: "companyId is required" },
-        { status: 400 }
-      );
-    }
 
     const members = await getCompanyMembers(companyId, activeOnly);
 
@@ -35,12 +31,22 @@ export async function GET(request: Request) {
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
+    const { id: companyId } = await params;
     const body = await request.json();
-    const validatedData = addCompanyMemberSchema.parse(body);
+
+    // Validate the body (excluding company_id since it comes from URL)
+    const validatedData = addCompanyMemberSchema.parse({
+      ...body,
+      company_id: companyId, // Override with URL param
+    });
+
     const memberData: AddCompanyMemberData = {
-      company_id: validatedData.company_id,
+      company_id: companyId,
       user_id: validatedData.user_id,
       role: validatedData.role,
       status: validatedData.status,

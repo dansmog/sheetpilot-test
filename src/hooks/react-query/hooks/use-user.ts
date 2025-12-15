@@ -90,12 +90,15 @@ export function useLoginUser() {
       await queryClient.prefetchQuery({
         queryKey: ["user-companies"],
         queryFn: async () => {
-          const response = await axios.get("/api/user/companies");
+          // Get user profile first to get userId
+          const profileResponse = await axios.get("/api/users");
+          const userId = profileResponse.data.profile.id;
+          const response = await axios.get(`/api/companies?userId=${userId}`);
           return response.data.companies;
         },
       });
 
-      router.push(data?.redirectUrl || "/dashboard");
+      router.push(data?.redirectUrl || "/organizations");
     },
     onError: (error: AxiosError<{ error: string }>) => {
       console.log({ error });

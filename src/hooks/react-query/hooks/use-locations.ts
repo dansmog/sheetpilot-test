@@ -9,17 +9,23 @@ async function fetchLocations(
   companyId: string,
   options: LocationsOptionsProps = {}
 ): Promise<LocationProps[]> {
-  const params = new URLSearchParams({ companyId });
+  const params = new URLSearchParams();
   if (options.activeOnly) {
     params.append("activeOnly", "true");
   }
 
-  const { data } = await axios.get(`/api/locations?${params.toString()}`);
+  const queryString = params.toString();
+  const url = queryString
+    ? `/api/companies/${companyId}/locations?${queryString}`
+    : `/api/companies/${companyId}/locations`;
+
+  const { data } = await axios.get(url);
   return data.locations;
 }
 
 async function createLocation(data: AddLocationFormData) {
-  const response = await axios.post("/api/locations", data);
+  const { company_id, ...locationData } = data;
+  const response = await axios.post(`/api/companies/${company_id}/locations`, locationData);
   return response.data;
 }
 

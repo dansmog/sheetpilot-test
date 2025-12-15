@@ -81,5 +81,8 @@ export interface UserCompanyProps {
     name: string;
     slug: string;
     logo_url: string | null;
+    current_plan: string | null;
+    location_count: number;
+    employee_count: number;
   };
 }

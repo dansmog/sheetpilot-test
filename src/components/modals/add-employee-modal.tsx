@@ -6,12 +6,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 
 import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -83,17 +84,17 @@ export function AddEmployeeModal() {
   };
 
   return (
-    <Sheet open={openModal === "addEmployee"} onOpenChange={handleOpenChange}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle>Add Employee</SheetTitle>
-          <SheetDescription>
+    <Dialog open={openModal === "addEmployee"} onOpenChange={handleOpenChange}>
+      <DialogContent className="sm:max-w-[500px]">
+        <DialogHeader>
+          <DialogTitle>Add Employee</DialogTitle>
+          <DialogDescription>
             Add a new employee to your company
-          </SheetDescription>
-        </SheetHeader>
+          </DialogDescription>
+        </DialogHeader>
 
         {currentCompany && (
-          <div className="mt-4 mx-4 rounded-lg flex flex-col gap-1 border bg-muted/50 p-3">
+          <div className="rounded-lg flex flex-col gap-1 border bg-muted/50 p-3">
             <p className="text-sm text-muted-foreground">
               You are adding a new employee to{" "}
             </p>
@@ -103,12 +104,11 @@ export function AddEmployeeModal() {
           </div>
         )}
 
-        <div className="px-4">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-4 mt-6"
-            >
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-4"
+          >
               <FormField
                 control={form.control}
                 name="user_id"
@@ -190,24 +190,22 @@ export function AddEmployeeModal() {
                 )}
               />
 
-              <div className="flex gap-3 pt-4">
+              <DialogFooter>
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => handleOpenChange(false)}
                   disabled={isPending}
-                  className="flex-1"
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={isPending} className="flex-1">
+                <Button type="submit" disabled={isPending}>
                   {isPending ? "Adding..." : "Add Employee"}
                 </Button>
-              </div>
+              </DialogFooter>
             </form>
           </Form>
-        </div>
-      </SheetContent>
-    </Sheet>
+      </DialogContent>
+    </Dialog>
   );
 }

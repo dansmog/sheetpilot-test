@@ -1,36 +1,47 @@
 "use client";
 
-import { SidebarIcon, Building2 } from "lucide-react";
+import Image from "next/image";
+import { SidebarIcon, Building2, HelpCircle } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
+import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useSidebar } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 import { CompanySwitcher } from "./company-switcher";
+import { LocationSwitcher } from "./location-switcher";
 import { useCompanyContext } from "@/contexts/CompanyContext";
 import { UserProfileProps } from "@/utils/types";
 import { useUserProfile } from "@/hooks/react-query/hooks/use-user";
 
+import Logo from "../../images/logo.svg";
+
 export function AppHeader() {
   const { toggleSidebar } = useSidebar();
   const queryClient = useQueryClient();
+  const pathname = usePathname();
   const { companies } = useCompanyContext();
+
+  // Determine if we're on a company-level or location-level route (show LocationSwitcher for both)
+  const segments = pathname?.split("/").filter(Boolean) || [];
+  const isCompanyOrLocationRoute =
+    segments.length >= 3 && pathname !== "/dashboard/organizations";
+
+  // Hide company switcher on organizations page
+  const isOrganizationsPage = pathname === "/dashboard/organizations";
 
   const cachedUserProfile = queryClient.getQueryData<UserProfileProps>([
     "user-profile",
   ]);
 
-  // Only fetch if not in cache and there's at least one company
   const shouldFetch = !cachedUserProfile && companies.length > 0;
   const { data: fetchedUserProfile } = useUserProfile({
     enabled: shouldFetch,
   });
 
-  // Use cached profile if available, otherwise use fetched profile
   const userProfile = cachedUserProfile || fetchedUserProfile;
 
-  // Transform user data for NavUser
   const userData = userProfile
     ? {
         name: userProfile.full_name || "User",
@@ -43,13 +54,11 @@ export function AppHeader() {
         avatar: "",
       };
 
-  console.log({ companies });
-
-  // Transform companies for CompanySwitcher
   const teamsData = companies.map((company) => ({
     name: company.company.name,
     logo: Building2,
     role: company.role === "owner" ? "Owner" : company.role,
+    plan: "free", // Placeholder, replace with actual plan if available
     slug: company.company.slug,
   }));
 
@@ -65,10 +74,48 @@ export function AppHeader() {
           <SidebarIcon />
         </Button>
         <Separator orientation="vertical" className="mr-2 h-4" />
-        <div className="w-fit">
-          <CompanySwitcher teams={teamsData} />
+        <div className="flex items-center gap-2">
+          <Image src={Logo} alt="SheetPilot Logo" className="h-5 w-auto mr-4" />
+
+          {!isOrganizationsPage ? (
+            <CompanySwitcher teams={teamsData} />
+          ) : (
+            <span className="text-sm font-medium">Organization</span>
+          )}
+          {isCompanyOrLocationRoute && (
+            <>
+              <span className="text-gray-600">
+                <svg
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  stroke="currentColor"
+                  strokeWidth="1"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  fill="none"
+                  shapeRendering="geometricPrecision"
+                >
+                  <path d="M16 3.549L7.12 20.600"></path>
+                </svg>
+              </span>
+              <LocationSwitcher />
+            </>
+          )}
         </div>
-        <div className="ml-auto">
+        <div className="ml-auto flex items-center gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => {
+              // TODO: Implement help/documentation link
+              window.open("/help", "_blank");
+            }}
+          >
+            <HelpCircle className="h-4 w-4" />
+            <span className="sr-only">Help</span>
+          </Button>
           <NavUser user={userData} />
         </div>
       </div>

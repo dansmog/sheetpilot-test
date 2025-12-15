@@ -1,30 +1,35 @@
-import { redirect } from "next/navigation";
-import { createClient } from "@/utils/supabase/server";
-import { getUserCompanies } from "@/lib/supabase/companies/queries";
+"use client";
 
-export default async function DashboardPage() {
-  const supabase = await createClient();
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/utils/supabase/client";
 
-  // Check if user is authenticated
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export default function IndexPage() {
+  const router = useRouter();
 
-  console.log({ user });
+  useEffect(() => {
+    const checkAuthAndRedirect = async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/auth/login");
-  }
+      if (!user) {
+        router.push("/auth/login");
+      } else {
+        router.push("/dashboard/organizations");
+      }
+    };
 
-  // Get user's companies
-  const companies = await getUserCompanies(user.id);
+    checkAuthAndRedirect();
+  }, [router]);
 
-  // If user has no companies, redirect to onboarding
-  if (!companies || companies.length === 0) {
-    redirect("/onboarding/company");
-  }
-
-  // Redirect to the first company's dashboard
-  const firstCompany = companies[0];
-  redirect(`/dashboard/${firstCompany.company.slug}`);
+  return (
+    <div className="flex h-screen w-full items-center justify-center">
+      <div className="text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600 mx-auto" />
+        <p className="mt-4 text-sm text-gray-600">Loading...</p>
+      </div>
+    </div>
+  );
 }

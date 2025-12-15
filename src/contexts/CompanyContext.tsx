@@ -12,9 +12,7 @@ interface CompanyContextType {
   isLoading: boolean;
 }
 
-const CompanyContext = createContext<CompanyContextType | undefined>(
-  undefined
-);
+const CompanyContext = createContext<CompanyContextType | undefined>(undefined);
 
 export function CompanyProvider({
   children,
@@ -37,26 +35,22 @@ export function CompanyProvider({
     slug,
   });
 
-  // Derive current company from slug
   const currentCompany = useMemo(() => {
     if (!slug || !companies.length) return null;
     return companies.find((c) => c.company.slug === slug) || null;
   }, [slug, companies]);
 
   const switchCompany = (company: UserCompanyProps) => {
-    // Replace the current slug in the URL with the new company's slug
     if (pathname) {
       const pathParts = pathname.split("/");
       const dashboardIndex = pathParts.indexOf("dashboard");
 
       if (dashboardIndex !== -1 && pathParts[dashboardIndex + 1]) {
-        // Replace the old slug with the new one
         pathParts[dashboardIndex + 1] = company.company.slug;
         const newPath = pathParts.join("/");
         router.push(newPath);
       } else {
-        // If no slug in path, navigate to the company's dashboard home
-        router.push(`/dashboard/${company.company.slug}`);
+        router.push(`/${company.company.slug}`);
       }
     }
   };

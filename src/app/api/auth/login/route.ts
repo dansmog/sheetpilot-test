@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { createClient } from "@/utils/supabase/server";
-import { getUserPrimaryCompany } from "@/lib/supabase/companies/queries";
+import { getUserCompanies } from "@/lib/supabase/companies/queries";
 import { loginSchema } from "@/utils/validation-schemas/auth.schema";
 
 export async function POST(request: NextRequest) {
@@ -48,25 +48,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log("Auth successful, fetching primary company...");
-    const primaryCompany = await getUserPrimaryCompany(authData.user.id);
-    console.log("Primary company:", primaryCompany?.company?.slug || "none");
+    console.log("Auth successful, fetching user companies...");
+    const companies = await getUserCompanies(authData.user.id);
+    console.log("User companies count:", companies.length);
 
-    const redirectUrl = primaryCompany
-      ? `/dashboard/${primaryCompany.company.slug}`
-      : "/onboarding/company";
+    let redirectUrl: string;
 
-    console.log("Login successful, redirecting to:", redirectUrl);
+    if (companies.length === 0) {
+      redirectUrl = "/onboarding/company";
+    } else if (companies.length === 1) {
+      redirectUrl = `/${companies[0].company.slug}`;
+    } else {
+      redirectUrl = "/organizations";
+    }
+
     return NextResponse.json({
       success: true,
       user: authData.user,
-      company: primaryCompany,
+      companies,
       redirectUrl,
     });
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(
-      { error: "An unexpected error occurred", details: error instanceof Error ? error.message : String(error) },
+      {
+        error: "An unexpected error occurred",
+        details: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 }
     );
   }

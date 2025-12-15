@@ -4,26 +4,51 @@ import { createCompanySchema } from "@/utils/validation-schemas/company.schema";
 import {
   createCompany,
   checkSlugAvailability,
+  getUserCompanies,
 } from "@/lib/supabase/companies/queries";
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const slug = searchParams.get("slug");
+    const userId = searchParams.get("userId");
 
-    if (!slug) {
-      return NextResponse.json(
-        { error: "Slug parameter is required" },
-        { status: 400 }
-      );
+    // Check slug availability
+    if (slug) {
+      const result = await checkSlugAvailability(slug);
+      return NextResponse.json(result, { status: 200 });
     }
 
-    const result = await checkSlugAvailability(slug);
-    return NextResponse.json(result, { status: 200 });
+    // Get user companies
+    if (userId) {
+      const { user } = await getAuthUser();
+
+      // Verify the requesting user matches the userId parameter
+      if (user.id !== userId) {
+        return NextResponse.json(
+          { error: "Unauthorized" },
+          { status: 401 }
+        );
+      }
+
+      const companies = await getUserCompanies(userId);
+      return NextResponse.json({
+        success: true,
+        companies,
+      });
+    }
+
+    return NextResponse.json(
+      { error: "Either slug or userId parameter is required" },
+      { status: 400 }
+    );
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (error: any) {
+    if (error.message === "Unauthorized") {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
     return NextResponse.json(
-      { error: error.message || "Failed to check slug availability" },
+      { error: error.message || "Failed to process request" },
       { status: 400 }
     );
   }

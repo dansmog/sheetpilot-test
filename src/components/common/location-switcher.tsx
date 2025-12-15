@@ -1,8 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { ChevronsUpDown, Plus } from "lucide-react";
-import { useCompanyContext } from "@/contexts/CompanyContext";
+import { ChevronsUpDown, MapPin, Plus } from "lucide-react";
+import { useLocationContext } from "@/contexts/LocationContext";
 import { useModal } from "@/contexts/ModalContext";
 
 import {
@@ -11,7 +11,6 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -21,41 +20,22 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 
-export function CompanySwitcher({
-  teams,
-}: {
-  teams: {
-    name: string;
-    logo: React.ElementType;
-    plan: string;
-    role: string;
-    slug: string;
-  }[];
-}) {
+export function LocationSwitcher() {
   const { isMobile } = useSidebar();
-  const { currentCompany, switchCompany, companies } = useCompanyContext();
+  const { currentLocation, switchLocation, locations } = useLocationContext();
   const { setOpenModal } = useModal();
 
-  // Find the active team based on current company from context
-  const activeTeam = React.useMemo(() => {
-    if (!currentCompany) return teams[0];
-    return (
-      teams.find((team) => team.slug === currentCompany.company.slug) ||
-      teams[0]
-    );
-  }, [currentCompany, teams]);
-
-  const handleTeamSwitch = (team: (typeof teams)[0]) => {
-    const company = companies.find((c) => c.company.slug === team.slug);
-    if (company) {
-      switchCompany(company);
+  const handleLocationSwitch = (locationId: string) => {
+    const location = locations.find((loc) => loc.id === locationId);
+    if (location) {
+      switchLocation(location);
     }
   };
 
-  if (!activeTeam || teams.length === 0) {
+  // Don't render if there are no locations at all
+  if (locations.length === 0) {
     return null;
   }
-  console.log({ activeTeam, teams });
 
   return (
     <SidebarMenu>
@@ -66,48 +46,60 @@ export function CompanySwitcher({
               size="lg"
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
             >
-              <div className=" text-sidebar-primary-foreground flex aspect-square items-center justify-center rounded-lg">
-                <activeTeam.logo className="size-4 text-black" />
+              <div className="text-sidebar-primary-foreground flex aspect-square items-center justify-center rounded-lg">
+                <MapPin className="size-4 text-black" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{activeTeam.name}</span>
-                <span className="truncate text-xs">{activeTeam.role}</span>
+                <span className="truncate font-medium">
+                  {currentLocation ? currentLocation.name : "Select a location"}
+                </span>
+                <span className="truncate text-xs text-muted-foreground">
+                  {currentLocation
+                    ? currentLocation.address || "No address"
+                    : "Choose a location"}
+                </span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-64 rounded-lg"
             align="start"
             side={isMobile ? "bottom" : "bottom"}
             sideOffset={4}
           >
             <DropdownMenuLabel className="text-muted-foreground text-xs">
-              Your companies
+              Locations
             </DropdownMenuLabel>
-            {teams.map((team, index) => (
+            {locations.map((location) => (
               <DropdownMenuItem
-                key={team.slug}
-                onClick={() => handleTeamSwitch(team)}
+                key={location.id}
+                onClick={() => handleLocationSwitch(location.id)}
                 className="gap-2 p-2"
               >
                 <div className="flex size-6 items-center justify-center rounded-md border">
-                  <team.logo className="size-3.5 shrink-0" />
+                  <MapPin className="size-3.5 shrink-0" />
                 </div>
-                {team.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                <div className="flex flex-col">
+                  <span className="font-medium">{location.name}</span>
+                  {location.address && (
+                    <span className="text-muted-foreground text-xs">
+                      {location.address}
+                    </span>
+                  )}
+                </div>
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="gap-2 p-2"
-              onClick={() => setOpenModal("addCompany")}
+              onClick={() => setOpenModal("addLocation")}
             >
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
               </div>
               <div className="text-muted-foreground font-medium">
-                Add another company
+                Add another location
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>

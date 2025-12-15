@@ -13,17 +13,23 @@ async function fetchCompanyMembers(
   companyId: string,
   options: CompanyMembersOptionsProps = {}
 ): Promise<CompanyMember[]> {
-  const params = new URLSearchParams({ companyId });
+  const params = new URLSearchParams();
   if (options.activeOnly) {
     params.append("activeOnly", "true");
   }
 
-  const { data } = await axios.get(`/api/company-members?${params.toString()}`);
+  const queryString = params.toString();
+  const url = queryString
+    ? `/api/companies/${companyId}/members?${queryString}`
+    : `/api/companies/${companyId}/members`;
+
+  const { data } = await axios.get(url);
   return data.members;
 }
 
 async function addCompanyMember(data: AddCompanyMemberFormData) {
-  const response = await axios.post("/api/company-members", data);
+  const { company_id, ...memberData } = data;
+  const response = await axios.post(`/api/companies/${company_id}/members`, memberData);
   return response.data;
 }
 

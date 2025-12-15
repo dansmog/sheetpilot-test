@@ -2,11 +2,12 @@
 
 import { CompanyProps, UserCompanyProps } from "@/utils/types";
 import { CreateCompanyFormValues } from "@/utils/validation-schemas/company.schema";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
+import { useUserProfile } from "./use-user";
 
 async function fetchCompany(companyId: string): Promise<CompanyProps> {
-  const { data } = await axios.get(`/api/companies?companyId=${companyId}`);
+  const { data } = await axios.get(`/api/companies/${companyId}`);
   return data.company;
 }
 
@@ -23,8 +24,14 @@ export function useCompany(companyId: string) {
   });
 }
 export function useCreateCompany() {
+  const queryClient = useQueryClient();
+
   return useMutation({
     mutationFn: createCompany,
+    onSuccess: () => {
+      // Invalidate the user-companies query to refetch and update the list
+      queryClient.invalidateQueries({ queryKey: ["user-companies"] });
+    },
   });
 }
 
@@ -44,15 +51,18 @@ export function useCheckSlugAvailability(slug: string) {
   });
 }
 
-async function fetchUserCompanies(): Promise<UserCompanyProps[]> {
-  const { data } = await axios.get("/api/user/companies");
+async function fetchUserCompanies(userId: string): Promise<UserCompanyProps[]> {
+  const { data } = await axios.get(`/api/companies?userId=${userId}`);
   return data.companies;
 }
 
 export function useUserCompanies() {
+  const { data: userProfile } = useUserProfile();
+
   return useQuery({
     queryKey: ["user-companies"],
-    queryFn: fetchUserCompanies,
+    queryFn: () => fetchUserCompanies(userProfile!.id),
+    enabled: !!userProfile?.id,
     staleTime: 5 * 60 * 1000, // 5 minutes - companies don't change often
   });
 }
