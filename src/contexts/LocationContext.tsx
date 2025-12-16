@@ -54,16 +54,19 @@ export function LocationProvider({
     if (pathname && currentCompany) {
       const pathParts = pathname.split("/");
 
+      // Check if we're in a location-level route: /dashboard/{slug}/{locationSlug}/...
       if (
-        pathParts.length >= 3 &&
-        pathParts[1] === currentCompany.company.slug
+        pathParts.length >= 4 &&
+        pathParts[1] === "dashboard" &&
+        pathParts[2] === currentCompany.company.slug
       ) {
-        pathParts[2] = location.slug;
+        // Replace the location slug (at index 3)
+        pathParts[3] = location.slug;
         const newPath = pathParts.join("/");
         router.push(newPath);
       } else {
         router.push(
-          `/${currentCompany.company.slug}/${location.slug}/overview`
+          `/dashboard/${currentCompany.company.slug}/${location.slug}/overview`
         );
       }
     }

@@ -57,9 +57,9 @@ export async function POST(request: NextRequest) {
     if (companies.length === 0) {
       redirectUrl = "/onboarding/company";
     } else if (companies.length === 1) {
-      redirectUrl = `/${companies[0].company.slug}`;
+      redirectUrl = `/dashboard/${companies[0].company.slug}/locations`;
     } else {
-      redirectUrl = "/organizations";
+      redirectUrl = "/dashboard/organizations";
     }
 
     return NextResponse.json({

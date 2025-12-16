@@ -191,3 +191,28 @@ export async function getUserPrimaryCompany(userId: string) {
   const ownerCompany = companies.find((c) => c.role === "owner");
   return ownerCompany || companies[0] || null;
 }
+
+export async function updateCompany(
+  companyId: string,
+  updates: Partial<{
+    name: string;
+    slug: string;
+    domain: string;
+    logo_url: string | null;
+    company_email: string | null;
+    current_plan: string | null;
+    location_count: number;
+    employee_count: number;
+  }>
+): Promise<void> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("companies")
+    .update(updates)
+    .eq("id", companyId);
+
+  if (error) {
+    throw error;
+  }
+}

@@ -9,7 +9,10 @@ export default function CompanyIndexPage() {
   const slug = params.slug as string;
 
   useEffect(() => {
-    // Redirect to the locations page as the default company page
+    if (slug === "organizations") {
+      return;
+    }
+
     if (slug) {
       router.replace(`/dashboard/${slug}/locations`);
     }

@@ -90,7 +90,6 @@ export function useLoginUser() {
       await queryClient.prefetchQuery({
         queryKey: ["user-companies"],
         queryFn: async () => {
-          // Get user profile first to get userId
           const profileResponse = await axios.get("/api/users");
           const userId = profileResponse.data.profile.id;
           const response = await axios.get(`/api/companies?userId=${userId}`);
@@ -98,7 +97,7 @@ export function useLoginUser() {
         },
       });
 
-      router.push(data?.redirectUrl || "/organizations");
+      router.push(data?.redirectUrl || "/dashboard/organizations");
     },
     onError: (error: AxiosError<{ error: string }>) => {
       console.log({ error });

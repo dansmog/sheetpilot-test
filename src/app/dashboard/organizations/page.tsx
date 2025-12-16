@@ -27,9 +27,9 @@ export default function OrganizationsPage() {
       return;
     }
 
-    // if (companies.length === 1) {
-    //   router.push(`/${companies[0].company.slug}`);
-    // }
+    if (companies.length === 1) {
+      router.push(`/dashboard/${companies[0].company.slug}/locations`);
+    }
   }, [companies, isLoading, error, router]);
 
   if (isLoading) {
@@ -77,7 +77,8 @@ export default function OrganizationsPage() {
                   <p className="text-sm flex items-center gap-3 mt-1 text-gray-500 capitalize">
                     {company.role}{" "}
                     <span className="h-1 w-1 rounded-full bg-gray-400 flex"></span>
-                    2 locations
+                    {company.company.location_count}{" "}
+                    {company.company.location_count === 1 ? "location" : "locations"}
                   </p>
                 </div>
               </div>

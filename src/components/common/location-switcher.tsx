@@ -53,7 +53,7 @@ export function LocationSwitcher() {
                 <span className="truncate font-medium">
                   {currentLocation ? currentLocation.name : "Select a location"}
                 </span>
-                <span className="truncate text-xs text-muted-foreground">
+                <span className="hidden md:block truncate text-xs text-muted-foreground">
                   {currentLocation
                     ? currentLocation.address || "No address"
                     : "Choose a location"}

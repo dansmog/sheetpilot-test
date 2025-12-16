@@ -84,6 +84,12 @@ export async function updateSession(request: NextRequest) {
     // Verify dashboard slug access
     if (isDashboardRoute) {
       const pathname = request.nextUrl.pathname;
+
+      // Skip verification for organizations page
+      if (pathname === "/dashboard/organizations") {
+        return supabaseResponse;
+      }
+
       const slugMatch = pathname.match(/^\/dashboard\/([^\/]+)/);
 
       if (slugMatch) {

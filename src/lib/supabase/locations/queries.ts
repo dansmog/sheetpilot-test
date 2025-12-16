@@ -1,5 +1,6 @@
 import { createClient } from "@/utils/supabase/server";
 import { LocationProps } from "@/utils/types";
+import { updateCompany } from "@/lib/supabase/companies/queries";
 
 export async function getLocations(
   companyId: string,
@@ -64,6 +65,25 @@ export async function createLocation(
     .single();
 
   if (error) throw error;
+
+  // Get current location_count to increment it
+  const { data: company } = await supabase
+    .from("companies")
+    .select("location_count")
+    .eq("id", locationData.company_id)
+    .single();
+
+  const currentCount = company?.location_count || 0;
+
+  // Increment location_count in companies table
+  try {
+    await updateCompany(locationData.company_id, {
+      location_count: currentCount + 1,
+    });
+  } catch (updateError) {
+    console.error("Failed to increment location_count:", updateError);
+    // Don't throw - location was created successfully
+  }
 
   return location;
 }

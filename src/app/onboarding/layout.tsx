@@ -25,6 +25,9 @@ export default async function OnboardingLayout({
       redirect(`/dashboard/${primaryCompany.company.slug}`);
     }
   } catch (error) {
+    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+      throw error;
+    }
     console.error("Error fetching company:", error);
     redirect("/auth/login");
   }

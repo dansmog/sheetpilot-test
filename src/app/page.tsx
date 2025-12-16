@@ -17,7 +17,7 @@ export default function IndexPage() {
       if (!user) {
         router.push("/auth/login");
       } else {
-        router.push("/organizations");
+        router.push("/dashboard/organizations");
       }
     };
 
