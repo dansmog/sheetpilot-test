@@ -1,9 +1,11 @@
 "use client";
 
-import * as React from "react";
 import { ChevronsUpDown, MapPin, Plus } from "lucide-react";
 import { useLocationContext } from "@/contexts/LocationContext";
 import { useModal } from "@/contexts/ModalContext";
+import { useCompanyContext } from "@/contexts/CompanyContext";
+import { useSubscription } from "@/hooks/use-subscription";
+import { canCreateResource } from "@/lib/subscription/plans";
 
 import {
   DropdownMenu,
@@ -23,12 +25,39 @@ import {
 export function LocationSwitcher() {
   const { isMobile } = useSidebar();
   const { currentLocation, switchLocation, locations } = useLocationContext();
-  const { setOpenModal } = useModal();
+  const { setOpenModal, showOverageWarning } = useModal();
+  const { currentCompany } = useCompanyContext();
+  const { currentCounts } = useSubscription();
 
   const handleLocationSwitch = (locationId: string) => {
     const location = locations.find((loc) => loc.id === locationId);
     if (location) {
       switchLocation(location);
+    }
+  };
+
+  const handleCreateLocation = () => {
+    const check = canCreateResource(
+      "location",
+      currentCounts?.locations,
+      currentCompany?.company?.current_plan,
+      currentCompany?.company?.subscription_status
+    );
+
+    if (check.willTriggerOverage) {
+      showOverageWarning({
+        resourceType: "location",
+        currentCount: currentCounts?.locations,
+        planLimit: check.limit!,
+        overageCost: check.overageCost!,
+        planName: check.planName!,
+        onConfirm: () => {
+          // Proceed with actual creation
+          setOpenModal("addLocation");
+        },
+      });
+    } else {
+      setOpenModal("addLocation");
     }
   };
 
@@ -93,7 +122,7 @@ export function LocationSwitcher() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               className="gap-2 p-2"
-              onClick={() => setOpenModal("addLocation")}
+              onClick={handleCreateLocation}
             >
               <div className="flex size-6 items-center justify-center rounded-md border bg-transparent">
                 <Plus className="size-4" />
