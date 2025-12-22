@@ -67,3 +67,22 @@ export async function updateUserProfile(
 
   return updatedProfile;
 }
+
+export async function getUserByEmail(
+  email: string
+): Promise<{ id: string } | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("users")
+    .select("id")
+    .eq("email", email.toLowerCase())
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw error;
+  }
+
+  return data;
+}

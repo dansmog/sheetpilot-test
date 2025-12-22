@@ -4,6 +4,7 @@ import * as React from "react";
 import { LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { LockedFeature } from "@/components/paywall/LockedFeature";
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -13,6 +14,8 @@ interface EmptyStateProps {
   onAction?: () => void;
   actionIcon?: LucideIcon;
   actionVariant?: "default" | "success" | "outline";
+  actionDisabled?: boolean;
+  actionLockReason?: string;
   className?: string;
   iconClassName?: string;
   centered?: boolean;
@@ -26,6 +29,8 @@ export function EmptyState({
   onAction,
   actionIcon: ActionIcon,
   actionVariant = "default",
+  actionDisabled = false,
+  actionLockReason,
   className,
   iconClassName,
   centered = true,
@@ -54,18 +59,25 @@ export function EmptyState({
         </div>
 
         {actionLabel && onAction && (
-          <Button
-            onClick={onAction}
-            className={cn(
-              "gap-2 mt-2",
-              actionVariant === "success" &&
-                "bg-[#0f9d58] hover:bg-[#0c7a45] dark:bg-success dark:hover:bg-success-strong"
-            )}
-            variant={actionVariant === "success" ? "default" : actionVariant}
+          <LockedFeature
+            isLocked={actionDisabled}
+            reason={actionLockReason}
+            variant="disabled"
           >
-            {ActionIcon && <ActionIcon className="w-4 h-4" />}
-            {actionLabel}
-          </Button>
+            <Button
+              onClick={onAction}
+              disabled={actionDisabled}
+              className={cn(
+                "gap-2 mt-2",
+                actionVariant === "success" &&
+                  "bg-[#0f9d58] hover:bg-[#0c7a45] dark:bg-success dark:hover:bg-success-strong"
+              )}
+              variant={actionVariant === "success" ? "default" : actionVariant}
+            >
+              {ActionIcon && <ActionIcon className="w-4 h-4" />}
+              {actionLabel}
+            </Button>
+          </LockedFeature>
         )}
       </div>
     </div>

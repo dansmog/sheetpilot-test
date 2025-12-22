@@ -29,6 +29,11 @@ async function createLocation(data: AddLocationFormData) {
   return response.data;
 }
 
+async function deleteLocation(companyId: string, locationId: string) {
+  const response = await axios.delete(`/api/companies/${companyId}/locations/${locationId}`);
+  return response.data;
+}
+
 export function useLocations(
   companyId: string,
   options: LocationsOptionsProps = {}
@@ -45,6 +50,19 @@ export function useCreateLocation() {
 
   return useMutation({
     mutationFn: createLocation,
+    onSuccess: () => {
+      // Invalidate all location queries
+      queryClient.invalidateQueries({ queryKey: ["locations"] });
+    },
+  });
+}
+
+export function useDeleteLocation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ companyId, locationId }: { companyId: string; locationId: string }) =>
+      deleteLocation(companyId, locationId),
     onSuccess: () => {
       // Invalidate all location queries
       queryClient.invalidateQueries({ queryKey: ["locations"] });

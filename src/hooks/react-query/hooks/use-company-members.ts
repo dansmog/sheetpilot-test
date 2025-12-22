@@ -1,21 +1,21 @@
 "use client";
 
-import { CompanyMember } from "@/lib/supabase/company-members/queries";
+import { CompanyMemberProps, CompanyMembersOptionsProps } from "@/utils/types";
 import { AddCompanyMemberFormData } from "@/utils/validation-schemas/company-member.schema";
+import { InviteEmployeeFormData } from "@/utils/validation-schemas/employee-invitation.schema";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
-
-interface CompanyMembersOptionsProps {
-  activeOnly?: boolean;
-}
 
 async function fetchCompanyMembers(
   companyId: string,
   options: CompanyMembersOptionsProps = {}
-): Promise<CompanyMember[]> {
+): Promise<CompanyMemberProps[]> {
   const params = new URLSearchParams();
   if (options.activeOnly) {
     params.append("activeOnly", "true");
+  }
+  if (options.locationId) {
+    params.append("locationId", options.locationId);
   }
 
   const queryString = params.toString();
@@ -30,6 +30,12 @@ async function fetchCompanyMembers(
 async function addCompanyMember(data: AddCompanyMemberFormData) {
   const { company_id, ...memberData } = data;
   const response = await axios.post(`/api/companies/${company_id}/members`, memberData);
+  return response.data;
+}
+
+async function inviteEmployee(data: InviteEmployeeFormData) {
+  const { company_id, ...invitationData } = data;
+  const response = await axios.post(`/api/companies/${company_id}/members`, invitationData);
   return response.data;
 }
 
@@ -52,6 +58,22 @@ export function useAddCompanyMember() {
     onSuccess: () => {
       // Invalidate all company member queries
       queryClient.invalidateQueries({ queryKey: ["company-members"] });
+      // Invalidate user-companies to refresh employee_count
+      queryClient.invalidateQueries({ queryKey: ["user-companies"] });
+    },
+  });
+}
+
+export function useInviteEmployee() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: inviteEmployee,
+    onSuccess: () => {
+      // Invalidate all company member queries to refresh the list
+      queryClient.invalidateQueries({ queryKey: ["company-members"] });
+      // Invalidate user-companies to refresh employee_count
+      queryClient.invalidateQueries({ queryKey: ["user-companies"] });
     },
   });
 }

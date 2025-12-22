@@ -4,6 +4,7 @@ import * as React from "react";
 import { ChevronsUpDown, Plus } from "lucide-react";
 import { useCompanyContext } from "@/contexts/CompanyContext";
 import { useModal } from "@/contexts/ModalContext";
+import { Badge } from "@/components/ui/badge";
 
 import {
   DropdownMenu,
@@ -36,6 +37,8 @@ export function CompanySwitcher({
   const { currentCompany, switchCompany, companies } = useCompanyContext();
   const { setOpenModal } = useModal();
 
+
+
   // Find the active team based on current company from context
   const activeTeam = React.useMemo(() => {
     if (!currentCompany) return teams[0];
@@ -55,7 +58,21 @@ export function CompanySwitcher({
   if (!activeTeam || teams.length === 0) {
     return null;
   }
-  console.log({ activeTeam, teams });
+
+  const getPlanColor = (plan: string) => {
+    switch (plan.toLowerCase()) {
+      case "lite":
+        return "bg-zinc-100 text-zinc-800 border-zinc-200 hover:bg-zinc-100";
+      case "starter":
+        return "bg-blue-100 text-blue-800 border-blue-200 hover:bg-blue-100";
+      case "growth":
+        return "bg-purple-100 text-purple-800 border-purple-200 hover:bg-purple-100";
+      case "scale":
+        return "bg-indigo-100 text-indigo-800 border-indigo-200 hover:bg-indigo-100";
+      default:
+        return "bg-slate-100 text-slate-800 border-slate-200 hover:bg-slate-100";
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -70,8 +87,16 @@ export function CompanySwitcher({
                 <activeTeam.logo className="size-4 text-black" />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">{activeTeam.name}</span>
-                <span className="hidden md:block truncate text-xs">{activeTeam.role}</span>
+                <div className="flex items-center gap-2">
+                  <span className="truncate font-medium">{activeTeam.name}</span>
+                  <Badge
+                    variant="outline"
+                    className={`text-[10px] h-4 px-1 py-0 capitalize border-0 ${getPlanColor(activeTeam.plan)}`}
+                  >
+                    {activeTeam.plan}
+                  </Badge>
+                </div>
+                <span className="truncate text-xs">{activeTeam.role}</span>
               </div>
               <ChevronsUpDown className="ml-auto" />
             </SidebarMenuButton>
@@ -94,8 +119,16 @@ export function CompanySwitcher({
                 <div className="flex size-6 items-center justify-center rounded-md border">
                   <team.logo className="size-3.5 shrink-0" />
                 </div>
-                {team.name}
-                <DropdownMenuShortcut>⌘{index + 1}</DropdownMenuShortcut>
+                <div className="flex flex-1 items-center justify-between">
+                  <span>{team.name}</span>
+                  <Badge
+                    variant="secondary"
+                    className={`text-[10px] h-4 px-1 py-0 capitalize ml-2 ${getPlanColor(team.plan)}`}
+                  >
+                    {team.plan}
+                  </Badge>
+                </div>
+
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />

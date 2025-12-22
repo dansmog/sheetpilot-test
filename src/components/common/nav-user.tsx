@@ -1,6 +1,7 @@
 "use client";
 
 import { BadgeCheck, CreditCard, LogOut, Sparkles } from "lucide-react";
+import Link from "next/link";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -18,7 +19,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { useLogoutUser } from "@/hooks/react-query/hooks";
+import { useLogoutUser, useCreatePortalSession } from "@/hooks/react-query/hooks";
+import { useCompanyContext } from "@/contexts/CompanyContext";
 
 export function NavUser({
   user,
@@ -31,10 +33,12 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const { mutate: logout, isPending } = useLogoutUser();
+  const { currentCompany } = useCompanyContext();
 
   const handleLogout = () => {
     logout();
   };
+
 
   return (
     <SidebarMenu>
@@ -75,10 +79,12 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <Sparkles />
-                Upgrade to Pro
-              </DropdownMenuItem>
+              <Link href="/upgrade" className="cursor-pointer">
+                <DropdownMenuItem>
+                  <Sparkles />
+                  Upgrade to Pro
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
@@ -86,10 +92,15 @@ export function NavUser({
                 <BadgeCheck />
                 Account
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCard />
-                Billing
-              </DropdownMenuItem>
+              <Link
+                href={currentCompany ? `/dashboard/${currentCompany.company.slug}/billing` : "/dashboard/organizations"}
+                className="cursor-pointer"
+              >
+                <DropdownMenuItem>
+                  <CreditCard />
+                  Billings
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout} disabled={isPending}>

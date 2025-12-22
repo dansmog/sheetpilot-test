@@ -57,21 +57,21 @@ export function AppHeader() {
 
   const userData = userProfile
     ? {
-        name: userProfile.full_name || "User",
-        email: userProfile.email,
-        avatar: userProfile.avatar_url || "/avatars/default.jpg",
-      }
+      name: userProfile.full_name || "User",
+      email: userProfile.email,
+      avatar: userProfile.avatar_url || "/avatars/default.jpg",
+    }
     : {
-        name: "Loading...",
-        email: "",
-        avatar: "",
-      };
+      name: "Loading...",
+      email: "",
+      avatar: "",
+    };
 
   const teamsData = companies.map((company) => ({
     name: company.company.name,
     logo: Building2,
     role: company.role === "owner" ? "Owner" : company.role,
-    plan: "free", // Placeholder, replace with actual plan if available
+    plan: company.company.current_plan || "free",
     slug: company.company.slug,
   }));
 

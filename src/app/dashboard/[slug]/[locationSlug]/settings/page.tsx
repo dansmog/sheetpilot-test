@@ -1,12 +1,14 @@
 "use client";
 
 import { useLocationContext } from "@/contexts/LocationContext";
+import { SubscriptionGuard } from "@/components/guards/SubscriptionGuard";
 
 export default function LocationSettingsPage() {
   const { currentLocation } = useLocationContext();
 
   return (
-    <div className="flex flex-col gap-6">
+    <SubscriptionGuard feature="location settings">
+      <div className="flex flex-col gap-6">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
@@ -58,6 +60,7 @@ export default function LocationSettingsPage() {
           Settings editing functionality coming soon...
         </p>
       </div>
-    </div>
+      </div>
+    </SubscriptionGuard>
   );
 }

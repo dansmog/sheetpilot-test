@@ -32,10 +32,13 @@ import { useModal } from "@/contexts/ModalContext";
 import { useCompanyContext } from "@/contexts/CompanyContext";
 import { useCreateLocation } from "@/hooks/react-query/hooks/use-locations";
 
+import { useQueryClient } from "@tanstack/react-query";
+
 export function AddLocationModal() {
   const { openModal, closeModal } = useModal();
   const { currentCompany } = useCompanyContext();
   const { mutate: createLocation, isPending } = useCreateLocation();
+  const queryClient = useQueryClient();
 
   const form = useForm<AddLocationFormData>({
     resolver: zodResolver(addLocationSchema),
@@ -63,6 +66,7 @@ export function AddLocationModal() {
       onSuccess: () => {
         toast.success("Location created successfully");
         form.reset();
+        queryClient.invalidateQueries({ queryKey: ["user-companies"] });
         closeModal();
       },
       onError: (error: Error) => {
@@ -91,7 +95,7 @@ export function AddLocationModal() {
 
   return (
     <Dialog open={openModal === "addLocation"} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-125">
         <DialogHeader>
           <DialogTitle>Add Location</DialogTitle>
           <DialogDescription>
@@ -111,125 +115,122 @@ export function AddLocationModal() {
         )}
 
         <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="space-y-4"
-          >
-              <FormField
-                control={form.control}
-                name="name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Location Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Main Office"
-                        disabled={isPending}
-                        {...field}
-                        onChange={(e) => {
-                          field.onChange(e);
-                          handleNameChange(e);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location Name</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Main Office"
+                      disabled={isPending}
+                      {...field}
+                      onChange={(e) => {
+                        field.onChange(e);
+                        handleNameChange(e);
+                      }}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="slug"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Slug</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="main-office"
-                        disabled={isPending}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      URL-friendly identifier (auto-generated from name)
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Slug</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="main-office"
+                      disabled={isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    URL-friendly identifier (auto-generated from name)
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="description"
-                render={({ field: { value, ...fieldProps } }) => (
-                  <FormItem>
-                    <FormLabel>Description (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="Brief description of the location"
-                        disabled={isPending}
-                        {...fieldProps}
-                        value={value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field: { value, ...fieldProps } }) => (
+                <FormItem>
+                  <FormLabel>Description (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="Brief description of the location"
+                      disabled={isPending}
+                      {...fieldProps}
+                      value={value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field: { value, ...fieldProps } }) => (
-                  <FormItem>
-                    <FormLabel>Address (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="123 Main St, City, State"
-                        disabled={isPending}
-                        {...fieldProps}
-                        value={value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="address"
+              render={({ field: { value, ...fieldProps } }) => (
+                <FormItem>
+                  <FormLabel>Address (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="123 Main St, City, State"
+                      disabled={isPending}
+                      {...fieldProps}
+                      value={value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="timezone"
-                render={({ field: { value, ...fieldProps } }) => (
-                  <FormItem>
-                    <FormLabel>Timezone (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        placeholder="America/New_York"
-                        disabled={isPending}
-                        {...fieldProps}
-                        value={value || ""}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="timezone"
+              render={({ field: { value, ...fieldProps } }) => (
+                <FormItem>
+                  <FormLabel>Timezone (Optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="America/New_York"
+                      disabled={isPending}
+                      {...fieldProps}
+                      value={value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <DialogFooter>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleOpenChange(false)}
-                  disabled={isPending}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={isPending}>
-                  {isPending ? "Creating..." : "Create Location"}
-                </Button>
-              </DialogFooter>
-            </form>
-          </Form>
+            <DialogFooter className="mt-10">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                disabled={isPending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Creating..." : "Create Location"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

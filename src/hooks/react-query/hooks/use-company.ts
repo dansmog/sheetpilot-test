@@ -63,6 +63,5 @@ export function useUserCompanies() {
     queryKey: ["user-companies"],
     queryFn: () => fetchUserCompanies(userProfile!.id),
     enabled: !!userProfile?.id,
-    staleTime: 5 * 60 * 1000, // 5 minutes - companies don't change often
   });
 }

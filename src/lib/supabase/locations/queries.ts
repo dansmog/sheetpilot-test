@@ -87,3 +87,37 @@ export async function createLocation(
 
   return location;
 }
+
+export async function deleteLocation(
+  locationId: string,
+  companyId: string
+): Promise<void> {
+  const supabase = await createClient();
+
+  // Delete the location
+  const { error } = await supabase
+    .from("locations")
+    .delete()
+    .eq("id", locationId);
+
+  if (error) throw error;
+
+  // Get current location_count to decrement it
+  const { data: company } = await supabase
+    .from("companies")
+    .select("location_count")
+    .eq("id", companyId)
+    .single();
+
+  const currentCount = company?.location_count || 0;
+
+  // Decrement location_count in companies table
+  try {
+    await updateCompany(companyId, {
+      location_count: Math.max(0, currentCount - 1),
+    });
+  } catch (updateError) {
+    console.error("Failed to decrement location_count:", updateError);
+    // Don't throw - location was deleted successfully
+  }
+}

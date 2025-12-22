@@ -1,13 +1,27 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { Check, ArrowLeft, Loader2 } from "lucide-react"; // Added Loader2
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import axios from "axios";
+
+import { useRouter, useSearchParams } from "next/navigation";
+import { Check, ArrowLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge"; // Assuming you have a toast component
-import { PLANS, PlanId } from "@/config/pricing"; // ✅ Import your config
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { PLANS, PlanId } from "@/config/pricing";
 import { toast } from "sonner";
+import { useCompanyContext } from "@/contexts/CompanyContext";
+import { useSubscription } from "@/hooks/use-subscription";
+import Logo from "../../images/logo.svg";
 
 // 1. Map your Marketing Content to your Logical IDs
 const PLAN_CONTENT: Record<
@@ -91,62 +105,175 @@ const PLAN_CONTENT: Record<
   },
 };
 
-export default function UpgradePage({ companyId }: { companyId: string }) {
+export default function UpgradePage() {
   const router = useRouter();
-  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "annually">(
+  const searchParams = useSearchParams();
+  const { companies } = useCompanyContext();
+  const [selectedCompany, setSelectedCompany] = useState<
+    (typeof companies)[0] | null
+  >(null);
+  const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
+
+  // Get subscription data from selectedCompany
+  const currentPlan = selectedCompany?.company.current_plan;
+  const billingInterval =
+    selectedCompany?.company.subscriptions?.[0]?.billing_interval;
+
+  const [billingPeriod, setBillingPeriod] = useState<"monthly" | "yearly">(
     "monthly"
   );
-  const [loadingPlan, setLoadingPlan] = useState<PlanId | null>(null);
+
+  // Update billing period when selectedCompany or billingInterval changes
+  useEffect(() => {
+    if (billingInterval) {
+      setBillingPeriod(billingInterval === "month" ? "monthly" : "yearly");
+    }
+  }, [billingInterval]);
+
+  // Set company based on URL companyId parameter or default to first company
+  useEffect(() => {
+    if (companies.length === 0) return;
+
+    const companyIdFromUrl = searchParams.get("companyId");
+
+    if (companyIdFromUrl) {
+      // Find company by ID from URL
+      const companyFromUrl = companies.find(
+        (c) => c.company.id === companyIdFromUrl
+      );
+      if (companyFromUrl) {
+        setSelectedCompany(companyFromUrl);
+        return;
+      }
+    }
+
+    // Default to first company if no URL param or company not found
+    if (!selectedCompany) {
+      setSelectedCompany(companies[0]);
+    }
+  }, [companies, searchParams, selectedCompany]);
+
+  const handleCompanyChange = (companySlug: string) => {
+    const selectedActiveCompany = companies.find(
+      (c) => c.company.slug === companySlug
+    );
+    if (selectedActiveCompany) {
+      setSelectedCompany(selectedActiveCompany);
+    }
+  };
 
   // 2. The Checkout Handler
   const handleCheckout = async (planKey: PlanId) => {
+    if (!selectedCompany) {
+      toast.error("Please select a company first");
+      return;
+    }
+
     setLoadingPlan(planKey);
     try {
-      const response = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          planId: planKey,
-          interval: billingPeriod === "monthly" ? "month" : "year",
-          companyId: companyId, // Passed from prop or context
-        }),
+      const { data } = await axios.post("/api/stripe/checkout", {
+        planId: planKey,
+        interval: billingPeriod,
+        companyId: selectedCompany.company.id,
       });
 
-      const data = await response.json();
-
-      if (!response.ok) throw new Error(data.error || "Checkout failed");
-      if (data.url) window.location.href = data.url; // Redirect to Stripe
+      if (data.url) {
+        // New subscription - redirect to Stripe Checkout
+        window.location.href = data.url;
+      } else if (data.success) {
+        // Plan switch - show success message and redirect
+        toast.success(data.message);
+        setTimeout(() => {
+          router.push(`/dashboard/${selectedCompany.company.slug}`);
+        }, 1500);
+      }
     } catch (error) {
       console.error(error);
-      toast.error("faile");
+      const errorMessage = axios.isAxiosError(error)
+        ? error.response?.data?.error
+        : "Failed to initiate checkout";
+      toast.error(errorMessage);
     } finally {
       setLoadingPlan(null);
     }
   };
 
+  // Page title changes based on whether user has active plan
+  const pageTitle = currentPlan
+    ? "Change Your Plan"
+    : "Choose the plan that fits";
+  const pageSubtitle = currentPlan
+    ? "Upgrade or downgrade your subscription anytime"
+    : null;
+
   return (
     <div className="w-full mx-auto px-5 md:px-10 py-12">
-      {/* ... (Header and Back Button code remains same) ... */}
+      <div className="w-full items-center gap-4 flex mb-8">
+        <Image src={Logo} alt="SheetPilot Logo" className="h-5 w-auto" />
+        <button
+          onClick={() => router.back()}
+          className="group flex cursor-pointer items-center gap-2 text-gray-600 hover:text-brand-2 transition-colors"
+        >
+          <ArrowLeft className="h-4 w-4 transition-transform" />
+          <span className="text-sm font-medium">Back to Dashboard</span>
+        </button>
+      </div>
 
-      {/* Toggle */}
+      <div className="text-center mb-8">
+        <p className="text-xs font-semibold text-brand-2 uppercase tracking-wider mb-2">
+          PRICING
+        </p>
+        <h1 className="text-xl md:text-3xl font-bold text-gray-900 flex flex-wrap items-center justify-center gap-2">
+          <span>{pageTitle}</span>
+          {companies.length > 1 ? (
+            <Select
+              value={selectedCompany?.company.slug || ""}
+              onValueChange={handleCompanyChange}
+            >
+              <SelectTrigger className="w-auto inline-flex h-auto p-0 border-0 shadow-none bg-transparent hover:bg-transparent focus:ring-0 focus:ring-offset-0 text-brand-2 font-bold text-xl md:text-3xl gap-1">
+                <SelectValue placeholder="your company" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  {companies.map((company) => (
+                    <SelectItem
+                      key={company.company.slug}
+                      value={company.company.slug}
+                    >
+                      {company.company.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          ) : selectedCompany ? (
+            <span className="text-brand-2">{selectedCompany.company.name}</span>
+          ) : (
+            <span className="text-brand-2">your company</span>
+          )}
+          {!currentPlan && <span>needs</span>}
+        </h1>
+        {pageSubtitle && (
+          <p className="text-sm text-gray-600 mt-2">{pageSubtitle}</p>
+        )}
+      </div>
+
       <div className="flex border p-1 border-gray-100 rounded-full w-fit mx-auto items-center justify-center gap-1 mb-12">
         <button
           onClick={() => setBillingPeriod("monthly")}
-          className={`px-6 py-2 rounded-full transition-colors ${
-            billingPeriod === "monthly"
-              ? "bg-purple-50 text-gray-900"
-              : "bg-white text-gray-600 hover:bg-gray-50"
-          }`}
+          className={`px-6 py-2 rounded-full transition-colors ${billingPeriod === "monthly"
+            ? "bg-purple-50 text-gray-900"
+            : "bg-white text-gray-600 hover:bg-gray-50"
+            }`}
         >
           Monthly
         </button>
         <button
-          onClick={() => setBillingPeriod("annually")}
-          className={`px-6 py-2 rounded-full transition-colors ${
-            billingPeriod === "annually"
-              ? "bg-purple-50 text-gray-900"
-              : "bg-white text-gray-600 hover:bg-gray-50"
-          }`}
+          onClick={() => setBillingPeriod("yearly")}
+          className={`px-6 py-2 rounded-full transition-colors ${billingPeriod === "yearly"
+            ? "bg-purple-50 text-gray-900"
+            : "bg-white text-gray-600 hover:bg-gray-50"
+            }`}
         >
           <span>Annually</span>
           <span className="ml-2 text-xs font-semibold text-brand-2">
@@ -156,7 +283,7 @@ export default function UpgradePage({ companyId }: { companyId: string }) {
       </div>
 
       {/* Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-2">
         {(Object.keys(PLANS) as PlanId[]).map((planKey) => {
           const content = PLAN_CONTENT[planKey];
           const price =
@@ -164,15 +291,58 @@ export default function UpgradePage({ companyId }: { companyId: string }) {
               ? content.monthlyPrice
               : content.yearlyPrice;
 
+          const isCurrentPlan = currentPlan === planKey;
+
+          // Calculate if this is an upgrade or downgrade
+          const PLAN_RANK: Record<PlanId, number> = {
+            lite: 1,
+            starter: 2,
+            growth: 3,
+            scale: 4,
+          };
+          const isUpgrade =
+            currentPlan &&
+            PLAN_RANK[planKey] > PLAN_RANK[currentPlan as PlanId];
+          const isDowngrade =
+            currentPlan &&
+            PLAN_RANK[planKey] < PLAN_RANK[currentPlan as PlanId];
+
+          // Button text logic
+          let buttonText = "Buy Plan";
+          if (loadingPlan === planKey) {
+            buttonText = "Processing...";
+          } else if (isCurrentPlan) {
+            // Check if it's the same interval
+            const currentInterval = billingInterval === "month" ? "monthly" : "yearly";
+            if (currentInterval === billingPeriod) {
+              buttonText = "Current Plan";
+            } else {
+              buttonText = billingPeriod === "monthly" ? "Switch to Monthly" : "Switch to Annual";
+            }
+          } else if (currentPlan) {
+            if (isUpgrade) {
+              buttonText = `Upgrade to ${PLANS[planKey].name}`;
+            } else if (isDowngrade) {
+              buttonText = `Downgrade to ${PLANS[planKey].name}`;
+            }
+          }
+
           return (
             <div
               key={planKey}
-              className={`relative flex flex-col rounded-2xl ${
-                content.recommended
-                  ? "border-2 border-brand-2 shadow-xl bg-gradient-to-b from-purple-50/50 to-white"
-                  : "border border-gray-200 bg-white"
-              }`}
+              className={`relative flex flex-col rounded-2xl ${content.recommended
+                ? "border-2 border-brand-2 shadow-xl bg-linear-to-b from-purple-50/50 to-white"
+                : "border border-gray-200 bg-white"
+                }`}
             >
+              {/* Active badge for current plan */}
+              {isCurrentPlan && (
+                <div className="absolute -top-3 left-6">
+                  <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-full px-3 py-1 text-xs">
+                    Active
+                  </Badge>
+                </div>
+              )}
               {content.recommended && (
                 <div className="absolute -top-3 right-6">
                   <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border border-green-200 rounded-full px-3 py-1 text-xs">
@@ -181,8 +351,8 @@ export default function UpgradePage({ companyId }: { companyId: string }) {
                 </div>
               )}
 
-              <CardHeader className="pb-6 pt-8">
-                <CardTitle className="text-xl font-semibold text-gray-900">
+              <CardHeader className="pb-6 pt-4 md:pt-8">
+                <CardTitle className="text-sm md:text-xl font-semibold text-gray-900">
                   {PLANS[planKey].name} {/* Uses name from Config */}
                 </CardTitle>
                 <div className="mt-4">
@@ -198,20 +368,22 @@ export default function UpgradePage({ companyId }: { companyId: string }) {
                 </p>
               </CardHeader>
 
-              <CardContent className="flex-1 pb-6 px-6">
+              <CardContent className="flex-1 pb-6 px-4 md:px-6">
                 <Button
                   onClick={() => handleCheckout(planKey)}
-                  disabled={loadingPlan !== null}
-                  className={`w-full mb-6 rounded-xl py-4 ${
-                    content.recommended
-                      ? "bg-brand-2 text-white hover:bg-purple-700"
-                      : "bg-white text-gray-900 border-2 border-brand-2 hover:bg-purple-50"
-                  }`}
+                  disabled={(isCurrentPlan && (billingInterval === "month" ? "monthly" : "yearly") === billingPeriod) || loadingPlan !== null}
+                  className={`w-full mb-6 rounded-xl py-4 ${content.recommended
+                    ? "bg-brand-2 text-white hover:bg-purple-700"
+                    : "bg-white text-gray-900 border-2 border-brand-2 hover:bg-purple-50"
+                    }`}
                 >
                   {loadingPlan === planKey ? (
-                    <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />{" "}
+                      Processing...
+                    </>
                   ) : (
-                    "Buy Plan"
+                    buttonText
                   )}
                 </Button>
 

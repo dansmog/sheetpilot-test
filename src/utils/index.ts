@@ -7,6 +7,8 @@ export async function getAuthUser() {
     error,
   } = await supabase.auth.getUser();
 
+  console.log({ user });
+
   if (error || !user) {
     throw new Error("Unauthorized");
   }

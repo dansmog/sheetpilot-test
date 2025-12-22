@@ -12,3 +12,4 @@ export {
   useCheckSlugAvailability,
 } from "./use-company";
 export { useLocations } from "./use-locations";
+export { useCreatePortalSession } from "./use-stripe";
