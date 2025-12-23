@@ -77,3 +77,20 @@ export function useInviteEmployee() {
     },
   });
 }
+
+async function resendInvitation(memberId: string) {
+  const response = await axios.post("/api/invitations/resend", { memberId });
+  return response.data;
+}
+
+export function useResendInvitation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: resendInvitation,
+    onSuccess: () => {
+      // Invalidate company member queries to refresh invitation timestamps
+      queryClient.invalidateQueries({ queryKey: ["company-members"] });
+    },
+  });
+}

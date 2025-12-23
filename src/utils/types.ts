@@ -139,6 +139,10 @@ export interface CompanyMemberProps {
     email: string;
     avatar_url: string | null;
   } | null;
+  company?: {
+    id: string;
+    name: string;
+  } | null;
   primary_location?: {
     id: string;
     name: string;

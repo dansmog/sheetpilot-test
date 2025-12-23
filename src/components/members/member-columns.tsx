@@ -16,6 +16,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Avatar } from "@/components/ui/avatar";
 import { formatDistanceToNow } from "date-fns";
+import { useResendInvitation } from "@/hooks/react-query/hooks/use-company-members";
+import { toast } from "sonner";
 
 const statusColors = {
     active: "bg-green-100 text-green-800 border-green-200",
@@ -37,6 +39,56 @@ const roleColors = {
     manager: "bg-blue-100 text-blue-800 border-blue-200",
     employee: "bg-gray-100 text-gray-800 border-gray-200",
 };
+
+function MemberRowActions({ member }: { member: CompanyMemberProps }) {
+    const resendInvitation = useResendInvitation();
+
+    const handleResendInvitation = () => {
+        toast.promise(
+            resendInvitation.mutateAsync(member.id),
+            {
+                loading: "Resending invitation...",
+                success: (data) => {
+                    return `Invitation resent to ${data.invitation.email}`;
+                },
+                error: (error) => {
+                    return error?.response?.data?.error || "Failed to resend invitation";
+                },
+            }
+        );
+    };
+
+    return (
+        <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                <DropdownMenuItem
+                    onClick={() => navigator.clipboard.writeText(member.id)}
+                >
+                    Copy member ID
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem>View details</DropdownMenuItem>
+                <DropdownMenuItem>Edit member</DropdownMenuItem>
+                {member.status === "pending" && (
+                    <DropdownMenuItem onClick={handleResendInvitation}>
+                        Resend invitation
+                    </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600">
+                    Remove member
+                </DropdownMenuItem>
+            </DropdownMenuContent>
+        </DropdownMenu>
+    );
+}
 
 export const memberColumns: ColumnDef<CompanyMemberProps>[] = [
     {
@@ -218,35 +270,7 @@ export const memberColumns: ColumnDef<CompanyMemberProps>[] = [
         enableHiding: false,
         cell: ({ row }) => {
             const member = row.original;
-
-            return (
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem
-                            onClick={() => navigator.clipboard.writeText(member.id)}
-                        >
-                            Copy member ID
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>View details</DropdownMenuItem>
-                        <DropdownMenuItem>Edit member</DropdownMenuItem>
-                        {member.status === "pending" && (
-                            <DropdownMenuItem>Resend invitation</DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-red-600">
-                            Remove member
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
-            );
+            return <MemberRowActions member={member} />;
         },
     },
 ];

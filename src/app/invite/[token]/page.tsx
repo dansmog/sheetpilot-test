@@ -220,7 +220,7 @@ export default function AcceptInvitationPage({
         <CardHeader>
           <CardTitle>Accept Invitation</CardTitle>
           <CardDescription>
-            You've been invited to join{" "}
+            You&apos;ve been invited to join{" "}
             <strong>{invitationDetails.company_name}</strong> as a{" "}
             <strong>{invitationDetails.role}</strong>
           </CardDescription>

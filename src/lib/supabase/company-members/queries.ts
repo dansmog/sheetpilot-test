@@ -270,3 +270,76 @@ export async function deleteCompanyMember(
     }
   }
 }
+
+export async function getCompanyMemberById(
+  memberId: string
+): Promise<CompanyMemberProps> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("company_members")
+    .select(
+      `
+      *,
+      user:users!company_members_user_id_fkey (
+        id,
+        full_name,
+        email,
+        avatar_url
+      ),
+      company:companies!company_members_company_id_fkey (
+        id,
+        name
+      ),
+      primary_location:locations!company_members_primary_location_id_fkey (
+        id,
+        name,
+        slug
+      )
+    `
+    )
+    .eq("id", memberId)
+    .single();
+
+  if (error) throw error;
+  return data;
+}
+
+export interface ResendInvitationData {
+  invitation_token: string;
+  invitation_sent_at: string;
+  invitation_expires_at: string;
+}
+
+export async function resendInvitation(
+  memberId: string,
+  invitationData: ResendInvitationData
+): Promise<CompanyMember> {
+  const supabase = await createClient();
+
+  // First check if the member exists and is pending
+  const { data: existingMember, error: checkError } = await supabase
+    .from("company_members")
+    .select("id, status")
+    .eq("id", memberId)
+    .single();
+
+  if (checkError || !existingMember) {
+    throw new Error("Member not found");
+  }
+
+  if (existingMember.status !== "pending") {
+    throw new Error("Only pending invitations can be resent");
+  }
+
+  // Update the invitation details
+  const { data, error } = await supabase
+    .from("company_members")
+    .update(invitationData)
+    .eq("id", memberId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return data;
+}
