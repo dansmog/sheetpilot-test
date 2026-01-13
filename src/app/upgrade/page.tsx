@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import Image from "next/image";
 import axios from "axios";
 
@@ -105,7 +105,7 @@ const PLAN_CONTENT: Record<
   },
 };
 
-export default function UpgradePage() {
+function UpgradePageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { companies } = useCompanyContext();
@@ -415,5 +415,19 @@ export default function UpgradePage() {
         })}
       </div>
     </div>
+  );
+}
+
+export default function UpgradePage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="w-full mx-auto px-5 md:px-10 py-12 flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-brand-2" />
+        </div>
+      }
+    >
+      <UpgradePageContent />
+    </Suspense>
   );
 }
