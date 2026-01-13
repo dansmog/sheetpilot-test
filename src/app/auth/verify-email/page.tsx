@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { AlertCircle } from "lucide-react";
 import axios from "axios";
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
@@ -167,5 +167,26 @@ export default function VerifyEmailPage() {
         </p>
       </div>
     </section>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense
+      fallback={
+        <section className="w-full">
+          <div className="flex flex-col justify-center items-center text-center w-full mb-10">
+            <h1 className="text-center text-primary text-xl font-semibold mb-1 mt-4">
+              Loading...
+            </h1>
+            <div className="mt-5">
+              <Spinner className="text-brand-2 size-8" />
+            </div>
+          </div>
+        </section>
+      }
+    >
+      <VerifyEmailContent />
+    </Suspense>
   );
 }
