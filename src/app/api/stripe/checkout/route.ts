@@ -96,7 +96,12 @@ export async function POST(req: Request) {
             );
           } catch (error) {
             // Handle specific Stripe card errors
-            if (error && typeof error === "object" && "type" in error && error.type === "StripeCardError") {
+            if (
+              error &&
+              typeof error === "object" &&
+              "type" in error &&
+              error.type === "StripeCardError"
+            ) {
               return NextResponse.json(
                 {
                   error:
@@ -181,7 +186,7 @@ export async function POST(req: Request) {
 
     // Get base URL from environment or request headers
     const baseUrl =
-      process.env.NEXT_PUBLIC_URL ||
+      process.env.NEXT_PUBLIC_BASE_URL ||
       `${req.headers.get("x-forwarded-proto") || "http"}://${req.headers.get(
         "host"
       )}`;
